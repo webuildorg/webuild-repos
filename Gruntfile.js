@@ -9,10 +9,8 @@ var jsFilesToCheck = [
   'public/js/main.js',
   'archives/**/*.js',
   'countdown/**/*.js',
-  'events/**/*.js',
   'repos/**/*.js',
   'test/archives/*.js',
-  'test/events/*.js',
   'test/repos/*.js'
 ];
 
@@ -107,22 +105,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-stylus');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-jsbeautifier');
-
-  grunt.registerTask('cleanup', 'Remove past events in blacklist and whitelist', function() {
-    var cleanup = require('./events/cleanup');
-    var blacklistEventsFilepath = __dirname  + '/events/blacklistEvents.json';
-    var whitelistEventsFilepath =  __dirname  + '/events/whitelistEvents.json';
-    var done = this.async();
-
-    cleanup.all(blacklistEventsFilepath, cleanup.getEventsToKeep(blacklistEventsFilepath), function(reply) {
-      grunt.log.writeln(reply);
-      cleanup.all(whitelistEventsFilepath, cleanup.getEventsToKeep(whitelistEventsFilepath), function(reply) {
-        grunt.log.writeln(reply);
-        done();
-      })
-    })
-
-  });
 
   grunt.registerTask('travis', [
     'clean',
