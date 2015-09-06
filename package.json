@@ -1,8 +1,8 @@
 {
   "name": "webuild-repos",
   "version": "1.0.0",
-  "homepage": "https://github.com/webuildorg",
-  "keywords": "repos, repositories, github",
+  "homepage": "https://github.com/webuildorg/webuild-repos",
+  "keywords": "repos, repositories, github, open source",
   "main": "index",
   "dependencies": {
     "github": "0.2.4",
