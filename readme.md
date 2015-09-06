@@ -1,6 +1,6 @@
 #webuild-repos
 
-> Get a list of open source repositories in your city from github.
+> Get a list of open source repositories in your city from Github.
 
 ##install
 
@@ -24,10 +24,11 @@ npm i webuild-repos
 - create a `.env` file to store all the environment variables:
 
 	```sh
-	NODE_ENV=development
-	LOCATION=Singapore # name of city
-	MAX_USERS=1000
-	MAX_REPOS=50
+	NODE_ENV=staging # put development if you want debug info from Github
+	LOCATION=Singapore # your city name
+	MAX_USERS=1000 # query top number of github users from your city
+	MAX_REPOS=50 # list out top number of repositories
+	STAR_LIMIT=50 # each repo must have at least this number of stars
 
 	# get from https://github.com/settings/applications/new, refer to https://developer.github.com/v3/oauth/
 	GITHUB_CLIENT_ID=secret
@@ -75,7 +76,7 @@ npm i webuild-repos
 	  console.log(repos.feed.meta)
 	  console.log('\nFirst event info:')
 	  console.log(repos.feed.repos[0])
-	}, 30000);
+	}, 60000);
 	```
 - install the relevant dependencies:
 
@@ -95,4 +96,4 @@ Following the [Semantic Versioning guidelines](http://semver.org/), run the `gru
 
 #license
 
-webuild-events is released under the [MIT License](http://opensource.org/licenses/MIT).
+webuild-repos is released under the [MIT License](http://opensource.org/licenses/MIT).
