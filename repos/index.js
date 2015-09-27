@@ -118,6 +118,9 @@ module.exports = function(config){
       .then(function(results) {
         var owners = {};
         return [].concat.apply([], results)
+          .filter(function(repo) {
+            return repo.language;
+          })
           .map(function(repo) {
             return {
               name: repo.name,
