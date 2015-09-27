@@ -5,12 +5,13 @@
   "keywords": "repos, repositories, github, open source",
   "main": "index",
   "dependencies": {
+    "cli-color": "1.0.0",
+    "clone": "^1.0.2",
     "github": "0.2.4",
     "jsonfile": "2.2.1",
     "mess": "0.1.2",
-    "promise": "7.0.4",
     "moment-timezone": "0.4.0",
-    "cli-color": "1.0.0",
+    "promise": "7.0.4",
     "request": "2.60.0"
   },
   "config": {
