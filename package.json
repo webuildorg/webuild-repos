@@ -1,10 +1,41 @@
 {
   "name": "webuild-repos",
-  "version": "1.1.1",
-  "homepage": "https://github.com/webuildorg/webuild-repos",
-  "keywords": "repos, repositories, github, open source",
-  "main": "index",
+  "version": "1.1.2",
+  "description": "",
+  "main": "index.js",
+  "repository" :{
+    "type" : "git",
+    "url" : "git+https://github.com/webuildorg/webuild-repos.git"
+  },
+  "keywords": [
+    "repos",
+    "repositories",
+    "github",
+    "open source"
+  ],
+  "author": { "name" : "Sayanee Basu",
+    "url" : "https://sayan.ee"
+  },
+  "contributors": [{
+    "name" : "Chinmay Pendharkar",
+    "url" : "https://chinpen.net"
+  }],
   "license": "MIT",
+  "homepage": "https://github.com/webuildorg/webuild-repos",
+  "bugs": {
+    "url": "https://github.com/webuildorg/webuild-repos/issues"
+  },
+  "engines" : {
+    "node" : ">=0.12"
+  },
+  "config": {
+    "blanket": {
+      "pattern": [
+        "repos/index.js"
+      ],
+      "data-cover-never": "node_modules"
+    }
+  },
   "dependencies": {
     "github": "0.2.4",
     "jsonfile": "2.2.1",
@@ -13,19 +44,5 @@
     "moment-timezone": "0.4.0",
     "cli-color": "1.0.0",
     "request": "2.60.0"
-  },
-  "repository" :{
-    "type" : "git",
-    "url" : "git+https://github.com/webuildorg/webuild-repos.git"
-  },
-  "config": {
-    "blanket": {
-      "pattern": [
-        "archives/index.js",
-        "countdown/index.js",
-        "repos/index.js"
-      ],
-      "data-cover-never": "node_modules"
-    }
   }
 }
