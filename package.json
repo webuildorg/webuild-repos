@@ -1,10 +1,10 @@
 {
   "name": "webuild-repos",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "homepage": "https://github.com/webuildorg/webuild-repos",
   "keywords": "repos, repositories, github, open source",
   "main": "index",
-  "license": "mit",
+  "license": "MIT",
   "dependencies": {
     "github": "0.2.4",
     "jsonfile": "2.2.1",
