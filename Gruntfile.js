@@ -1,7 +1,5 @@
 var versionFiles = [
-  'package.json',
-  'bower.json',
-  'public/humans.txt'
+  'package.json'
 ];
 var jsFilesToCheck = [
   'Gruntfile.js',
