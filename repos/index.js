@@ -130,6 +130,10 @@ module.exports = function(config){
               updated_at: repo.updated_at,
               language: repo.language,
               stargazers_count: repo.stargazers_count,
+              forks_count: repo.forks_count,
+              open_issues_count: repo.open_issues_count,
+              size: repo.size,
+              subscribers_count: repo.subscribers_count,
               owner: {
                 login: repo.owner.login,
                 avatar_url: repo.owner.avatar_url,
