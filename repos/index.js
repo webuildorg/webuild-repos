@@ -59,12 +59,13 @@ module.exports = function(config){
           }
           return;
         }
+
         res.items
         .slice(0, limit - items.length)
         .forEach(function(item) {
           items.push(item);
-            // console.log(items.length, item);
-          });
+        });
+
         if (items.length >= limit || !github.hasNextPage(res)) {
           resolve(items);
         } else {
@@ -86,88 +87,114 @@ module.exports = function(config){
   }
 
   function updateRepos() {
-      var pushedQuery = 'pushed:>' + moment().subtract(3, 'months').format('YYYY-MM-DD');
+    var pushedQuery = 'pushed:>' + moment().subtract(3, 'months').format('YYYY-MM-DD');
 
-      console.log('Info: Updating the repos feed... this may take a while');
-      return fetch(github.search.users, {
-        q: 'location:' + config.githubParams.location
-      }, config.githubParams.maxUsers)
-      .then(function(users) {
-        console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
-        var searches = chunk(mess(users), 20).map(function(users) {
-          return fetch(github.search.repos, {
-            sort: 'updated',
-            order: 'desc',
-            q: [
-              'stars:>=' + config.githubParams.starLimit,
-              'fork:true',
-              pushedQuery
-            ].concat(
-              users
-                .filter(function(user) {
-                  return !/"/.test(user.login);
-                })
-                .map(function(user) {
-                  return 'user:"' + user.login + '"';
-                })
-            ).join('+')
-          }, config.githubParams.maxRepos);
-        });
-        return Promise.all(searches);
-      })
-      .then(function(results) {
-        var owners = {};
-        return [].concat.apply([], results)
-          .filter(function(repo) {
-            return repo.language;
-          })
-          .map(function(repo) {
-            return {
-              name: repo.name,
-              html_url: repo.html_url,
-              description: repo.description,
-              pushed_at: repo.pushed_at,
-              updated_at: repo.updated_at,
-              language: repo.language,
-              stargazers_count: repo.stargazers_count,
-              forks_count: repo.forks_count,
-              open_issues_count: repo.open_issues_count,
-              size: repo.size,
-              subscribers_count: repo.subscribers_count,
-              owner: {
-                login: repo.owner.login,
-                avatar_url: repo.owner.avatar_url,
-                html_url: repo.owner.html_url
-              }
-            };
-          })
-          .sort(function(a, b) {
-            return a.pushed_at > b.pushed_at ? -1 : 1;
-          })
-          .filter(function(repo) {
-            owners[ repo.owner.login ] = 1 + (owners[ repo.owner.login ] || 0);
-            return owners[ repo.owner.login ] === 1;
-          })
-          .slice(0, config.githubParams.maxRepos);
-      })
-      .then(function(repos) {
-        console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
-        reposResult.meta = {
-            generated_at: new Date().toISOString(),
-            location: config.githubParams.location,
-            total_repos: repos.length,
-            api_version: 'v1',
-            max_users: config.githubParams.maxUsers,
-            max_repos: config.githubParams.maxRepos
-        };
-        reposResult.repos = repos;
-        jf.writeFile(config.githubParams.outfile, reposResult);
-        return reposResult;
-      })
-      .catch(function(err) {
-        console.error(err);
+    console.log('Info: Updating the repos feed... this may take a while');
+
+    return fetch(github.search.users, {
+      q: 'location:' + config.githubParams.location
+    }, config.githubParams.maxUsers)
+    .then(function(users) {
+      console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
+      var searches = chunk(mess(users), 20).map(function(users) {
+        return fetch(github.search.repos, {
+          sort: 'updated',
+          order: 'desc',
+          q: [
+            'stars:>=' + config.githubParams.starLimit,
+            'fork:true',
+            pushedQuery
+          ].concat(
+            users
+              .filter(function(user) {
+                return !/"/.test(user.login);
+              })
+              .map(function(user) {
+                return 'user:"' + user.login + '"';
+              })
+          ).join('+')
+        }, config.githubParams.maxRepos);
       });
-    }
+      return Promise.all(searches);
+    })
+    .then(function(results) {
+      var owners = {};
+      return [].concat.apply([], results)
+        .filter(function(repo) {
+          return repo.language;
+        })
+        .map(function(repo) {
+          return {
+            name: repo.name,
+            html_url: repo.html_url,
+            description: repo.description,
+            pushed_at: repo.pushed_at,
+            updated_at: repo.updated_at,
+            language: repo.language,
+            stargazers_count: repo.stargazers_count,
+            forks_count: repo.forks_count,
+            open_issues_count: repo.open_issues_count,
+            size: repo.size,
+            subscribers_count: repo.subscribers_count,
+            owner: {
+              login: repo.owner.login,
+              avatar_url: repo.owner.avatar_url,
+              html_url: repo.owner.html_url
+            }
+          }
+        })
+        .sort(function(a, b) {
+          return a.pushed_at > b.pushed_at ? -1 : 1;
+        })
+        .filter(function(repo) {
+          owners[ repo.owner.login ] = 1 + (owners[ repo.owner.login ] || 0);
+          return owners[ repo.owner.login ] === 1;
+        })
+        .slice(0, config.githubParams.maxRepos)
+    })
+    .then(function(repos) {
+      var count = 0;
+      var repoLength = repos.length;
+
+      repos.forEach(function(repo) {
+        github.repos.getContributors({
+          repo: repo.name,
+          user: repo.owner.login
+        }, function(err, res) {
+          if (res && res.length > 0) {
+            count++;
+            repo.contributors = [];
+
+            res.forEach(function(r) {
+              repo.contributors.push({
+                login: r.login,
+                html_url: r.html_url,
+                contributions: r.contributions
+              })
+            })
+          }
+
+          if (count === repoLength) {
+            console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
+            reposResult.meta = {
+              generated_at: new Date().toISOString(),
+              location: config.githubParams.location,
+              total_repos: repos.length,
+              api_version: 'v1',
+              max_users: config.githubParams.maxUsers,
+              max_repos: config.githubParams.maxRepos
+            };
+            reposResult.repos = repos;
+            jf.writeFile(config.githubParams.outfile, reposResult);
+            return reposResult;
+          }
+        })
+      })
+    })
+    .catch(function(err) {
+      console.error(err);
+    });
+  }
 
   return {
     feed: reposResult,
