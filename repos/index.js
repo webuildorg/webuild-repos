@@ -218,24 +218,19 @@ module.exports = function(config){
   });
 
   function updateRepos() {
-    var maxUsers = config.githubParams.maxUsers;
-    var maxRepos = config.githubParams.maxRepos;
-    var searchUsers = github.search.users;
-    var searchRepos = github.search.repos;
-
     console.log('Info: Updating the repos feed... this may take a while');
 
-    return fetch(searchUsers, searchUserOptions(config), maxUsers, github)
+    return fetch(github.search.users, searchUserOptions(config), config.githubParams.maxUsers, github)
     .then(function(users) {
       console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
 
       var searches = chunk(mess(users), 20).map(function(users) {
-        return fetch(searchRepos, searchReposOptions(config, users), maxRepos, github);
+        return fetch(github.search.repos, searchReposOptions(config, users), config.githubParams.maxRepos, github);
       });
       return Promise.all(searches);
     })
     .then(function(results) {
-      return addReposAndOwners(results, maxRepos)
+      return addReposAndOwners(results, config.githubParams.maxRepos)
     })
     .then(function(repos) {
       return addContributorsToRepos(repos, reposResult, github, config)
