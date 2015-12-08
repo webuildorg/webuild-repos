@@ -156,6 +156,22 @@ function addContributors(response) {
 
   return result;
 }
+
+function addReposAndOwners(results, maxRepos) {
+  var owners = {};
+
+  return []
+  .concat.apply([], results)
+  .filter(hasValidLanguage)
+  .map(getRepoObject)
+  .sort(sortByPushedAt)
+  .filter(function(repo) {
+    owners[ repo.owner.login ] = 1 + (owners[ repo.owner.login ] || 0);
+    return owners[ repo.owner.login ] === 1;
+  })
+  .slice(0, maxRepos)
+}
+
 module.exports = function(config){
   var github = new GitHubApi({
     version: config.githubParams.version,
@@ -194,18 +210,7 @@ module.exports = function(config){
       return Promise.all(searches);
     })
     .then(function(results) {
-      var owners = {};
-
-      return []
-      .concat.apply([], results)
-      .filter(hasValidLanguage)
-      .map(getRepoObject)
-      .sort(sortByPushedAt)
-      .filter(function(repo) {
-        owners[ repo.owner.login ] = 1 + (owners[ repo.owner.login ] || 0);
-        return owners[ repo.owner.login ] === 1;
-      })
-      .slice(0, maxRepos)
+      return addReposAndOwners(results, maxRepos)
     })
     .then(function(repos) {
       var count = 0;
