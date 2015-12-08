@@ -96,6 +96,13 @@ function searchReposOptions(config, users) {
   }
 }
 
+function searchContributorsOptions(repo) {
+  return {
+    repo: repo.name,
+    user: repo.owner.login
+  }
+}
+
 function getRepoObject(repo) {
   return {
     name: repo.name,
@@ -117,10 +124,38 @@ function getRepoObject(repo) {
   }
 }
 
+function getMetaObject(config, repos) {
+  return {
+    generated_at: new Date().toISOString(),
+    location: config.githubParams.location,
+    total_repos: repos.length,
+    api_version: 'v1',
+    max_users: config.githubParams.maxUsers,
+    max_repos: config.githubParams.maxRepos
+  };
+}
+
 function hasValidLanguage(repo) {
   return repo.language;
 }
 
+function sortByPushedAt(a, b) {
+  return a.pushed_at > b.pushed_at ? -1 : 1;
+}
+
+function addContributors(response) {
+  var result = [];
+
+  response.forEach(function(r) {
+    result.push({
+      login: r.login,
+      html_url: r.html_url,
+      contributions: r.contributions
+    })
+  })
+
+  return result;
+}
 module.exports = function(config){
   var github = new GitHubApi({
     version: config.githubParams.version,
@@ -142,14 +177,19 @@ module.exports = function(config){
   });
 
   function updateRepos() {
+    var maxUsers = config.githubParams.maxUsers;
+    var maxRepos = config.githubParams.maxRepos;
+    var searchUsers = github.search.users;
+    var searchRepos = github.search.repos;
+
     console.log('Info: Updating the repos feed... this may take a while');
 
-    return fetch(github.search.users, searchUserOptions(config), config.githubParams.maxUsers, github)
+    return fetch(searchUsers, searchUserOptions(config), maxUsers, github)
     .then(function(users) {
       console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
 
       var searches = chunk(mess(users), 20).map(function(users) {
-        return fetch(github.search.repos, searchReposOptions(config, users), config.githubParams.maxRepos, github);
+        return fetch(searchRepos, searchReposOptions(config, users), maxRepos, github);
       });
       return Promise.all(searches);
     })
@@ -160,49 +200,32 @@ module.exports = function(config){
       .concat.apply([], results)
       .filter(hasValidLanguage)
       .map(getRepoObject)
-      .sort(function(a, b) {
-        return a.pushed_at > b.pushed_at ? -1 : 1;
-      })
+      .sort(sortByPushedAt)
       .filter(function(repo) {
         owners[ repo.owner.login ] = 1 + (owners[ repo.owner.login ] || 0);
         return owners[ repo.owner.login ] === 1;
       })
-      .slice(0, config.githubParams.maxRepos)
+      .slice(0, maxRepos)
     })
     .then(function(repos) {
       var count = 0;
       var repoLength = repos.length;
 
       repos.forEach(function(repo) {
-        github.repos.getContributors({
-          repo: repo.name,
-          user: repo.owner.login
-        }, function(err, res) {
+        github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
           if (res && res.length > 0) {
+            repo.contributors = addContributors(res);
             count++;
-            repo.contributors = [];
-
-            res.forEach(function(r) {
-              repo.contributors.push({
-                login: r.login,
-                html_url: r.html_url,
-                contributions: r.contributions
-              })
-            })
           }
 
           if (count === repoLength) {
             console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
-            reposResult.meta = {
-              generated_at: new Date().toISOString(),
-              location: config.githubParams.location,
-              total_repos: repos.length,
-              api_version: 'v1',
-              max_users: config.githubParams.maxUsers,
-              max_repos: config.githubParams.maxRepos
-            };
+
+            reposResult.meta = getMetaObject(config, repos);
             reposResult.repos = repos;
+
             jf.writeFile(config.githubParams.outfile, reposResult);
+
             return reposResult;
           }
         })
