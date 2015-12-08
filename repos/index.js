@@ -117,6 +117,10 @@ function getRepoObject(repo) {
   }
 }
 
+function hasValidLanguage(repo) {
+  return repo.language;
+}
+
 module.exports = function(config){
   var github = new GitHubApi({
     version: config.githubParams.version,
@@ -143,6 +147,7 @@ module.exports = function(config){
     return fetch(github.search.users, searchUserOptions(config), config.githubParams.maxUsers, github)
     .then(function(users) {
       console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
+
       var searches = chunk(mess(users), 20).map(function(users) {
         return fetch(github.search.repos, searchReposOptions(config, users), config.githubParams.maxRepos, github);
       });
@@ -150,13 +155,11 @@ module.exports = function(config){
     })
     .then(function(results) {
       var owners = {};
-      return [].concat.apply([], results)
-      .filter(function(repo) {
-        return repo.language;
-      })
-      .map(function(repo) {
-        return getRepoObject(repo)
-      })
+
+      return []
+      .concat.apply([], results)
+      .filter(hasValidLanguage)
+      .map(getRepoObject)
       .sort(function(a, b) {
         return a.pushed_at > b.pushed_at ? -1 : 1;
       })
