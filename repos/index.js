@@ -172,6 +172,31 @@ function addReposAndOwners(results, maxRepos) {
   .slice(0, maxRepos)
 }
 
+function addContributorsToRepos(repos, reposResult, github, config) {
+  var count = 0;
+  var repoLength = repos.length;
+
+  repos.forEach(function(repo) {
+    github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
+      if (res && res.length > 0) {
+        repo.contributors = addContributors(res);
+        count++;
+      }
+
+      if (count === repoLength) {
+        console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
+
+        reposResult.meta = getMetaObject(config, repos);
+        reposResult.repos = repos;
+
+        jf.writeFile(config.githubParams.outfile, reposResult);
+
+        return reposResult;
+      }
+    })
+  })
+}
+
 module.exports = function(config){
   var github = new GitHubApi({
     version: config.githubParams.version,
@@ -213,28 +238,7 @@ module.exports = function(config){
       return addReposAndOwners(results, maxRepos)
     })
     .then(function(repos) {
-      var count = 0;
-      var repoLength = repos.length;
-
-      repos.forEach(function(repo) {
-        github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
-          if (res && res.length > 0) {
-            repo.contributors = addContributors(res);
-            count++;
-          }
-
-          if (count === repoLength) {
-            console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
-
-            reposResult.meta = getMetaObject(config, repos);
-            reposResult.repos = repos;
-
-            jf.writeFile(config.githubParams.outfile, reposResult);
-
-            return reposResult;
-          }
-        })
-      })
+      return addContributorsToRepos(repos, reposResult, github, config)
     })
     .catch(function(err) {
       console.error(err);
