@@ -180,29 +180,25 @@ function addReposAndOwners(results, maxRepos) {
   .slice(0, maxRepos)
 }
 
-function addContributorsToRepos(repos, reposResult, github, config) {
+function addContributorsToRepos(repos, github) {
   var count = 0;
   var repoLength = repos.length;
 
-  repos.forEach(function(repo) {
-    github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
-      if (res && res.length > 0) {
-        repo.contributors = addContributors(res);
-        count++;
-      }
+  var repoPromises = repos.map(function(repo) {
+    return new Promise(function(resolve, reject) {
+      github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
+        if (err) {
+          console.error(clc.red('Error: ' + err));
+        }
+        if (res && res.length > 0) {
+          repo.contributors = addContributors(res);
+        }
+        resolve(repo);
+      })
+    });
+  });
 
-      if (count === repoLength) {
-        console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
-
-        reposResult.meta = getMetaObject(config, repos);
-        reposResult.repos = repos;
-
-        jf.writeFile(config.githubParams.outfile, reposResult);
-
-        return reposResult;
-      }
-    })
-  })
+  return Promise.all(repoPromises);
 }
 
 function addDayData() {
@@ -271,12 +267,18 @@ module.exports = function(config){
       return addReposAndOwners(results, config.githubParams.maxRepos)
     })
     .then(function(repos) {
-      var reply = addContributorsToRepos(repos, reposResult, github, config)
+      return addContributorsToRepos(repos, github)
+    })
+    .then(function(repos) {
+      console.log(clc.green('Success: Added ' + repos.length + ' GitHub repos'));
+
+      reposResult.meta = getMetaObject(config, repos);
+      reposResult.repos = repos;
+
+      jf.writeFile(config.githubParams.outfile, reposResult);
 
       addDayData()
       addHourData()
-
-      return reply
     })
     .catch(function(err) {
       console.error(err);
