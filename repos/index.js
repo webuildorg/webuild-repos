@@ -12,6 +12,14 @@ var reposResult = {
   'meta': {},
   'repos': []
 };
+var reposToday = {
+  'meta': {},
+  'repos': []
+};
+var reposHour = {
+  'meta': {},
+  'repos': []
+};
 
 function authenticate(config, account) {
   if (config.githubParams.clientID && config.githubParams.clientSecret) {
@@ -197,6 +205,32 @@ function addContributorsToRepos(repos, reposResult, github, config) {
   })
 }
 
+function addDayData() {
+  reposToday.meta.generated_at = reposResult.meta.generated_at
+  reposToday.meta.location = reposResult.meta.location
+  reposToday.repos = getCurrentDayData(reposResult)
+  reposToday.meta.total_repos = reposToday.repos.length
+}
+
+function addHourData() {
+  reposHour.meta.generated_at = reposResult.meta.generated_at
+  reposHour.meta.location = reposResult.meta.location
+  reposHour.repos = getCurrentHourData(reposResult)
+  reposHour.meta.total_repos = reposHour.repos.length
+}
+
+function getCurrentDayData(data) {
+  return data.repos.filter(function(element) {
+    return moment(data.meta.generated_at).diff(moment(element.pushed_at), 'days') === 0;
+  })
+}
+
+function getCurrentHourData(data) {
+  return data.repos.filter(function (element) {
+    return moment(element.pushed_at).isBefore(moment().add(1, 'hour'))
+  })
+}
+
 module.exports = function(config){
   var github = new GitHubApi({
     version: config.githubParams.version,
@@ -211,6 +245,10 @@ module.exports = function(config){
         if (!err) {
           reposResult.meta = savedResult.meta;
           reposResult.repos = savedResult.repos;
+
+          addDayData()
+          addHourData()
+
           console.log('Info: Loaded ' + savedResult.repos.length + ' repos from cache');
         }
       });
@@ -233,7 +271,12 @@ module.exports = function(config){
       return addReposAndOwners(results, config.githubParams.maxRepos)
     })
     .then(function(repos) {
-      return addContributorsToRepos(repos, reposResult, github, config)
+      var reply = addContributorsToRepos(repos, reposResult, github, config)
+
+      addDayData()
+      addHourData()
+
+      return reply
     })
     .catch(function(err) {
       console.error(err);
@@ -242,6 +285,21 @@ module.exports = function(config){
 
   return {
     feed: reposResult,
-    update: updateRepos
+    update: updateRepos,
+    day: reposToday,
+    hour: reposHour,
+    get: function(count) {
+      var answer = {
+        meta: {
+          'generated_at': new Date().toISOString(),
+          'location': config.city,
+          'api_version': config.api_version,
+          'total_repos': parseInt(count)
+        },
+        repos: reposResult.repos.slice(0, parseInt(count))
+      }
+
+      return answer
+    },
   }
 }
