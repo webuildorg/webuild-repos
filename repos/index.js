@@ -227,7 +227,7 @@ function getCurrentDayData(data) {
 
 function getCurrentHourData(data) {
   return data.repos.filter(function (element) {
-    return moment(element.pushed_at).isBefore(moment().add(1, 'hour'))
+    return moment(element.pushed_at).isAfter(moment().subtract(1, 'hour'))
   })
 }
 
