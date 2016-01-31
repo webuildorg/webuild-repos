@@ -84,6 +84,12 @@ function searchUserOptions(config) {
   }
 }
 
+function searchOrgOptions(config) {
+  return {
+    q: 'type:org+location:' + config.githubParams.location
+  }
+}
+
 function searchReposOptions(config, users) {
   return {
     sort: 'updated',
@@ -124,6 +130,7 @@ function getRepoObject(repo) {
     open_issues_count: repo.open_issues_count,
     size: repo.size,
     subscribers_count: repo.subscribers_count,
+    type: repo.owner.type,
     owner: {
       login: repo.owner.login,
       avatar_url: repo.owner.avatar_url,
@@ -183,16 +190,24 @@ function addReposAndOwners(results, maxRepos) {
 function addContributorsToRepos(repos, github) {
   var count = 0;
   var repoLength = repos.length;
+  var errorMessageOnContributorList = 'The history or contributor list is too large to list contributors for this repository via the API.'
 
   var repoPromises = repos.map(function(repo) {
     return new Promise(function(resolve, reject) {
       github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
         if (err) {
-          console.error(clc.red('Error: ' + err));
+          if (JSON.parse(err).message === errorMessageOnContributorList) {
+            console.log(clc.yellow('Warn for ' + repo.html_url + ': ' + err));
+            repo.contributors = 'Contributor list is too large'
+          } else {
+            console.error(clc.red('Error for ' + repo.html_url + ': ' + err));
+          }
         }
+
         if (res && res.length > 0) {
           repo.contributors = addContributors(res);
         }
+
         resolve(repo);
       })
     });
@@ -258,10 +273,18 @@ module.exports = function(config){
     .then(function(users) {
       console.log(clc.blue('Info: Found ' + users.length + ' github.com users'));
 
-      var searches = chunk(mess(users), 20).map(function(users) {
-        return fetch(github.search.repos, searchReposOptions(config, users), config.githubParams.maxRepos, github);
-      });
-      return Promise.all(searches);
+      return fetch(github.search.users, searchOrgOptions(config), config.githubParams.maxUsers, github)
+      .then(function(orgs) {
+        console.log(clc.blue('Info: Found ' + orgs.length + ' github.com organisation'));
+
+        var totalUsers = users.concat(orgs);
+        console.log(clc.blue('Info: Found ' + totalUsers.length + ' github.com user and organisation'));
+
+        var searches = chunk(mess(totalUsers), 20).map(function(totalUsers) {
+          return fetch(github.search.repos, searchReposOptions(config, totalUsers), config.githubParams.maxRepos, github);
+        });
+        return Promise.all(searches);
+      })
     })
     .then(function(results) {
       return addReposAndOwners(results, config.githubParams.maxRepos)
@@ -302,6 +325,6 @@ module.exports = function(config){
       }
 
       return answer
-    },
+    }
   }
 }
