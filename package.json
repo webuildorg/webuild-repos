@@ -1,6 +1,6 @@
 {
   "name": "webuild-repos",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "generates a list of top open source repositories in your city",
   "main": "index.js",
   "repository" :{
