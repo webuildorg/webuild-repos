@@ -124,6 +124,7 @@ function getRepoObject(repo) {
     description: repo.description,
     pushed_at: repo.pushed_at,
     updated_at: repo.updated_at,
+    formatted_time: moment(repo.pushed_at).endOf('hour').fromNow(),
     language: repo.language,
     stargazers_count: repo.stargazers_count,
     forks_count: repo.forks_count,
