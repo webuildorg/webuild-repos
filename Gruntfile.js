@@ -36,17 +36,6 @@ module.exports = function(grunt) {
       'public/css/style.css',
       'public/js/script.js'
     ],
-    csslint: {
-      options: {
-        csslintrc: '.csslintrc'
-      },
-      strict: {
-        options: {
-          import: 2
-        },
-        src: [ 'public/css/style.css' ]
-      }
-    },
     jscs: {
       src: jsFilesToCheck,
       options: {
@@ -61,32 +50,6 @@ module.exports = function(grunt) {
         src: jsFilesToCheck
       }
     },
-    stylus: {
-      dist: {
-        options: {
-          compress: true
-        },
-        files: {
-          'public/css/style.css': 'public/css/style.styl'
-        }
-      }
-    },
-    uglify: {
-      production: {
-        options: {
-          mangle: false,
-          compress: true,
-          beautify: false
-        },
-        files: {
-          'public/js/script.js': [
-            'public/js/vendor/moment/min/moment.min.js',
-            'public/js/vendor/fluidvids/dist/fluidvids.min.js',
-            'public/js/main.js'
-          ]
-        }
-      }
-    },
     jsbeautifier: {
       files: [ 'public/js/main.js' ],
       options: {
@@ -97,11 +60,8 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-bump');
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-csslint');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-jscs');
-  grunt.loadNpmTasks('grunt-contrib-stylus');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-jsbeautifier');
 
   grunt.registerTask('travis', [
@@ -109,25 +69,18 @@ module.exports = function(grunt) {
     'stylus',
     'jshint',
     'jsbeautifier',
-    'jscs',
-    'uglify',
-    'csslint'
+    'jscs'
   ]);
 
   grunt.registerTask('default', [
     'clean',
     'jshint',
-    'csslint',
     'jsbeautifier',
-    'jscs',
-    'uglify',
-    'stylus'
+    'jscs'
   ]);
 
   grunt.registerTask('build', [
-    'jsbeautifier',
-    'uglify',
-    'stylus'
+    'jsbeautifier'
   ]);
 
 };

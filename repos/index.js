@@ -3,7 +3,6 @@
 var fs = require('fs');
 var jf = require('jsonfile');
 var mess = require('mess');
-var request = require('request');
 var Promise = require('promise');
 var GitHubApi = require('github');
 var moment = require('moment-timezone');
@@ -189,12 +188,10 @@ function addReposAndOwners(results, maxRepos) {
 }
 
 function addContributorsToRepos(repos, github) {
-  var count = 0;
-  var repoLength = repos.length;
   var errorMessageOnContributorList = 'The history or contributor list is too large to list contributors for this repository via the API.'
 
   var repoPromises = repos.map(function(repo) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       github.repos.getContributors(searchContributorsOptions(repo), function(err, res) {
         if (err) {
           if (JSON.parse(err).message === errorMessageOnContributorList) {
@@ -217,11 +214,23 @@ function addContributorsToRepos(repos, github) {
   return Promise.all(repoPromises);
 }
 
+function getCurrentDayData(data) {
+  return data.repos.filter(function(element) {
+    return moment(data.meta.generated_at).diff(moment(element.pushed_at), 'days') === 0;
+  })
+}
+
 function addDayData() {
   reposToday.meta.generated_at = reposResult.meta.generated_at
   reposToday.meta.location = reposResult.meta.location
   reposToday.repos = getCurrentDayData(reposResult)
   reposToday.meta.total_repos = reposToday.repos.length
+}
+
+function getCurrentHourData(data) {
+  return data.repos.filter(function (element) {
+    return moment(element.pushed_at).isAfter(moment().subtract(1, 'hour'))
+  })
 }
 
 function addHourData() {
@@ -231,19 +240,7 @@ function addHourData() {
   reposHour.meta.total_repos = reposHour.repos.length
 }
 
-function getCurrentDayData(data) {
-  return data.repos.filter(function(element) {
-    return moment(data.meta.generated_at).diff(moment(element.pushed_at), 'days') === 0;
-  })
-}
-
-function getCurrentHourData(data) {
-  return data.repos.filter(function (element) {
-    return moment(element.pushed_at).isAfter(moment().subtract(1, 'hour'))
-  })
-}
-
-module.exports = function(config){
+module.exports = function(config)   {
   var github = new GitHubApi({
     version: config.githubParams.version,
     debug: config.debug

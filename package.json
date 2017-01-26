@@ -3,9 +3,9 @@
   "version": "1.4.3",
   "description": "generates a list of top open source repositories in your city",
   "main": "index.js",
-  "repository" :{
-    "type" : "git",
-    "url" : "git+https://github.com/webuildorg/webuild-repos.git"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webuildorg/webuild-repos.git"
   },
   "keywords": [
     "repos",
@@ -13,20 +13,23 @@
     "github",
     "open source"
   ],
-  "author": { "name" : "Sayanee Basu",
-    "url" : "https://sayan.ee"
+  "author": {
+    "name": "Sayanee Basu",
+    "url": "https://sayan.ee"
   },
-  "contributors": [{
-    "name" : "Chinmay Pendharkar",
-    "url" : "https://chinpen.net"
-  }],
+  "contributors": [
+    {
+      "name": "Chinmay Pendharkar",
+      "url": "https://chinpen.net"
+    }
+  ],
   "license": "MIT",
   "homepage": "https://github.com/webuildorg/webuild-repos",
   "bugs": {
     "url": "https://github.com/webuildorg/webuild-repos/issues"
   },
-  "engines" : {
-    "node" : ">=0.12"
+  "engines": {
+    "node": ">=0.12"
   },
   "config": {
     "blanket": {
@@ -37,17 +40,20 @@
     }
   },
   "dependencies": {
-    "github": "0.2.4",
-    "jsonfile": "2.2.1",
+    "github": "8.1.1",
+    "jsonfile": "2.4.0",
     "mess": "0.1.2",
-    "promise": "7.0.4",
-    "moment-timezone": "0.4.0",
-    "cli-color": "1.0.0",
-    "request": "2.60.0"
+    "promise": "7.1.1",
+    "moment-timezone": "0.5.11",
+    "cli-color": "1.1.0"
   },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-bump": "^0.6.0",
-    "grunt-cli": "^0.1.13"
+    "grunt": "^1.0.1",
+    "grunt-bump": "^0.8.0",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-jsbeautifier": "^0.2.13",
+    "grunt-jscs": "^3.0.1"
   }
 }
