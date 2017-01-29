@@ -112,7 +112,7 @@ function searchReposOptions(config, users) {
 function searchContributorsOptions(repo) {
   return {
     repo: repo.name,
-    user: repo.owner.login
+    owner: repo.owner.login
   }
 }
 
