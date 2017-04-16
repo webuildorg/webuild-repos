@@ -204,6 +204,8 @@ function addContributorsToRepos(repos, github) {
 
         if (res && res.length > 0) {
           repo.contributors = addContributors(res);
+        }else{
+          repo.contributors = [];
         }
 
         resolve(repo);
